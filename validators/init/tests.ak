@@ -1,6 +1,6 @@
 use cardano/assets
 use cardano/transaction.{NoDatum, Transaction, placeholder}
-use init/pro_tokens.{Account, Recipient, Supply, Transfer}
+use init/pro_tokens.{Account, Close, Recipient, Supply, Transfer}
 use tools as t
 
 test supplyMint() {
@@ -127,7 +127,27 @@ test sendTokens() {
 }
 
 test closeAccount() {
-  True
+  let boot = t.oref(#"0000", 1)
+  let oref = t.oref(#"1111", 1)
+
+  let script = #"aaaa"
+  let user = #"face"
+  let action = Close
+  let accountValue = t.makeAsset(script, user, 1)
+  let burnValue = t.makeAsset(script, user, -1)
+
+  let userIn =
+    t.input(oref, t.output(t.scriptAddress(script), accountValue, NoDatum))
+
+  let tx =
+    Transaction {
+      ..placeholder,
+      inputs: [userIn],
+      mint: burnValue,
+      extra_signatories: [user],
+    }
+
+  pro_tokens.account.spend(boot, None, action, oref, tx)?
 }
 
 test burnSupply() {
