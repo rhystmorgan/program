@@ -26,7 +26,8 @@ pub type AccountMintAction {
 //    NOT Account Tokens
 
 pub type AccountAction {
-  Transfer
+  Transfer { owner: ByteArray, quantity: Int }
+  Recipient
   Close
   BurnSupply
 }
@@ -137,8 +138,44 @@ validator account(boot: OutputReference) {
       )
 
     when r is {
-      Transfer ->
-        assets.tokens(inValue, ownHash) == assets.tokens(outValue, ownHash)
+      Transfer { owner, quantity } -> {
+        expect [Pair("", inQty),
+          Pair(ownerName, 1)] =
+          ownIn.output.value
+            |> assets.tokens(ownHash)
+            |> dict.to_pairs()
+
+        expect Some(ownerOut) =
+          list.find(
+            ownOuts,
+            fn(out) { list.has(assets.flatten(out.value), (ownHash, owner, 1)) },
+          )
+
+        and {
+          assets.quantity_of(ownerOut.value, ownHash, "") == inQty - quantity,
+          assets.tokens(inValue, ownHash) == assets.tokens(outValue, ownHash),
+          list.has(tx.extra_signatories, owner),
+          ownerName == owner,
+        }
+      }
+      Recipient -> {
+        expect [Pair("", rQty),
+          Pair(rName, 1)] =
+          ownIn.output.value
+            |> assets.tokens(ownHash)
+            |> dict.to_pairs()
+
+        expect Some(out) =
+          list.find(
+            tx.outputs,
+            fn(out) {
+              out.value
+                |> assets.flatten()
+                |> list.has((ownHash, rName, 1))
+            },
+          )
+        assets.quantity_of(out.value, ownHash, "") > rQty
+      }
       Close -> {
         // If someone wants to close their account
         expect [Pair(accountName, -1)] =
