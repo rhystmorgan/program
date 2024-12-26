@@ -1,7 +1,8 @@
 use aiken/collection/dict
 use aiken/collection/list
-use cardan/assets.{PolicyId}
+use aiken/math
 use cardano/address.{Script}
+use cardano/assets.{PolicyId}
 use cardano/transaction.{OutputReference, Transaction}
 
 // This is my own design for programmable tokens
@@ -42,8 +43,8 @@ validator account(boot: OutputReference) {
             |> assets.tokens(p)
             |> dict.to_pairs()
 
-        expect Some(bootIn)
-        list.find(tx.inputs, fn(in) { in.output_reference == boot })
+        expect Some(_bootIn) =
+          list.find(tx.inputs, fn(in) { in.output_reference == boot })
 
         expect Some(accountOut) =
           list.find(
@@ -102,20 +103,21 @@ validator account(boot: OutputReference) {
     oref: OutputReference,
     tx: Transaction,
   ) {
-    let ownIn = list.find(tx.inputs, fn(in) { in.output_reference == oref })
+    expect Some(ownIn) =
+      list.find(tx.inputs, fn(in) { in.output_reference == oref })
 
-    let ownHash = ownIn.output.address.payment_credential
+    expect Script(ownHash) = ownIn.output.address.payment_credential
 
     let ownIns =
       list.filter(
         tx.inputs,
-        fn(in) { input.output.address.payment_credential == ownHash },
+        fn(in) { in.output.address.payment_credential == Script(ownHash) },
       )
 
     let ownOuts =
       list.filter(
         tx.outputs,
-        fn(out) { out.address.payment_credential == ownHash },
+        fn(out) { out.address.payment_credential == Script(ownHash) },
       )
     // Here we are just checking that the total in == total out of our programmables
     // ins and outs are of our ownHash, so we cant leak any tokens
@@ -147,7 +149,7 @@ validator account(boot: OutputReference) {
         let accountValue = assets.from_asset(ownHash, accountName, 1)
 
         and {
-          list.has(extra_signatories, accountName),
+          list.has(tx.extra_signatories, accountName),
           assets.without_lovelace(assets.merge(outValue, accountValue)) == assets.without_lovelace(
             inValue,
           ),
