@@ -6,6 +6,8 @@ use cardano/transaction.{OutputReference, Transaction}
 
 // This is my own design for programmable tokens
 // The idea is to keep it super simple, as little complexity as possible
+// The validator doesnt care if you are sending anything to the correct account,
+// all it checks for is that the value of total inputs == total outputs
 
 // Supply: If a token has a fixed supply - an 'all in one mint' will initialise the token
 // Account: A User's account token, an NFT with the PKH assetName
@@ -15,6 +17,12 @@ pub type AccountMintAction {
   Account { owner: ByteArray }
   Burn
 }
+
+// Transfer: This is for transferring tokens between accounts
+//    The accounts must already exist
+// Close: This is for a user to close their account -> burn the account token
+// BurnSupply: kinda self explanatory, but it will only allow burning of CNTs
+//    NOT Account Tokens
 
 pub type AccountAction {
   Transfer
@@ -127,9 +135,8 @@ validator account(boot: OutputReference) {
       )
 
     when r is {
-      Transfer -> and {
-          assets.tokens(inValue, ownHash) == assets.tokens(outValue, ownHash),
-        }
+      Transfer ->
+        assets.tokens(inValue, ownHash) == assets.tokens(outValue, ownHash)
       Close -> {
         // If someone wants to close their account
         expect [Pair(accountName, -1)] =
@@ -151,6 +158,7 @@ validator account(boot: OutputReference) {
           tx.mint
             |> assets.tokens(ownHash)
             |> dict.to_pairs()
+
         let burnValue = assets.from_asset(ownHash, "", math.abs(burnQty))
 
         and {
