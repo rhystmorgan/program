@@ -1,56 +1,58 @@
-pub type AccountMintAction {
-  AMint { acc: ByteArray }
-  ABurn
-}
+// THIS IS A WORK IN PROGRESS OF THE PROPOSED CIP STANDARD CIP-113 PROGRAMMABLE TOKENS //
 
-pub type AccountAction {AccountAction}
+// pub type AccountMintAction {
+//   AMint { acc: ByteArray }
+//   ABurn
+// }
 
-pub type AccountDatum {
-  // this field wouldnt be needed if the AssetName is the credential
-  credentials: ByteArray,
-  state: Data,
-}
+// pub type AccountAction {AccountAction}
 
-// this implementation is simple, it expects that ONLY one asset is minted/burned
-// it also expects that ONLY this asset is at the output except lovelace
-validator stateManager {
-  mint(r: AccountAction, p: PolicyId, tx: Transaction) {
-    expect [Pair(accName, accQty)] =
-      tx.mint
-        |> assets.tokens(p)
-        |> dict.to_pairs()
-    when r is {
-      AMint { acc } -> {
-        let accountList =
-          list.filter(
-            tx.outputs,
-            fn(out) { out.address.payment_credential == Script(p) },
-          )
+// pub type AccountDatum {
+//   // this field wouldnt be needed if the AssetName is the credential
+//   credentials: ByteArray,
+//   state: Data,
+// }
 
-        expect Some(accOut) = list.head(accountList)
+// // this implementation is simple, it expects that ONLY one asset is minted/burned
+// // it also expects that ONLY this asset is at the output except lovelace
+// validator stateManager {
+//   mint(r: AccountAction, p: PolicyId, tx: Transaction) {
+//     expect [Pair(accName, accQty)] =
+//       tx.mint
+//         |> assets.tokens(p)
+//         |> dict.to_pairs()
+//     when r is {
+//       AMint { acc } -> {
+//         let accountList =
+//           list.filter(
+//             tx.outputs,
+//             fn(out) { out.address.payment_credential == Script(p) },
+//           )
 
-        let expectedAccount = assets.from_asset(p, acc, 1)
+//         expect Some(accOut) = list.head(accountList)
 
-        and {
-          acc == accName,
-          assets.without_lovelace(accOut) == expectedAccount,
-        }
-      }
-      ABurn -> True
-    }
-    // todo
-  }
+//         let expectedAccount = assets.from_asset(p, acc, 1)
 
-  spend(
-    datum: Option<AccountDatum>,
-    r: AccountAction,
-    oref: OutputReference,
-    tx: Transaction,
-  ) {
-    todo
-  }
+//         and {
+//           acc == accName,
+//           assets.without_lovelace(accOut) == expectedAccount,
+//         }
+//       }
+//       ABurn -> True
+//     }
+//     // todo
+//   }
 
-  else(_) {
-    fail
-  }
-}
+//   spend(
+//     datum: Option<AccountDatum>,
+//     r: AccountAction,
+//     oref: OutputReference,
+//     tx: Transaction,
+//   ) {
+//     todo
+//   }
+
+//   else(_) {
+//     fail
+//   }
+// }

@@ -8,7 +8,7 @@ use cardano/transaction.{OutputReference, Transaction}
 // The idea is to keep it super simple, as little complexity as possible
 
 // Supply: If a token has a fixed supply - an 'all in one mint' will initialise the token
-// Mint: A User's account token, an NFT with the PKH assetName
+// Account: A User's account token, an NFT with the PKH assetName
 
 pub type AccountMintAction {
   Supply { quantity: Int }
@@ -19,6 +19,7 @@ pub type AccountMintAction {
 pub type AccountAction {
   Transfer
   Close
+  BurnSupply
 }
 
 validator account(boot: OutputReference) {
@@ -53,15 +54,15 @@ validator account(boot: OutputReference) {
         }
       }
       Account { owner } -> {
+        // Because we are finding here, we can only have this single user Account output to script
+        // alternatively we could use a tx.output index as part of the redeemer to allow us to
+        // deposit straight into the newly created account, this would allow for account creation
+        // and deposits in the same transaction which would obviously be a better process
         expect [Pair(accountName, 1)] =
           tx.mint
             |> assets.tokens(p)
             |> dict.to_pairs()
 
-        // Because we are finding here, we can only have this single user Account output to script
-        // alternatively we could use a tx.output index as part of the redeemer to allow us to
-        // deposit straight into the newly created account, this would allow for account creation
-        // and deposits in the same transaction which would obviously be a better process
         expect Some(accountOut) =
           list.find(
             tx.outputs,
