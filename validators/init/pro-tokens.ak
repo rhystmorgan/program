@@ -145,6 +145,20 @@ validator account(boot: OutputReference) {
           ),
         }
       }
+      BurnSupply -> {
+        expect [Pair("", burnQty)] =
+          tx.mint
+            |> assets.tokens(ownHash)
+            |> dict.to_pairs()
+        let burnValue = assets.from_asset(ownHash, "", math.abs(burnQty))
+
+        and {
+          burnQty < 0,
+          assets.without_lovelace(assets.merge(outValue, burnValue)) == assets.without_lovelace(
+            inValue,
+          ),
+        }
+      }
     }
   }
 
