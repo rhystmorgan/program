@@ -89,6 +89,7 @@ validator account(boot: OutputReference) {
           tx.mint
             |> assets.tokens(p)
             |> dict.to_pairs()
+
         if burnName == "" {
           burnQty < 0
         } else {

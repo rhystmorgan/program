@@ -1,11 +1,13 @@
-// THIS IS A WORK IN PROGRESS OF THE PROPOSED CIP STANDARD CIP-113 PROGRAMMABLE TOKENS //
+// // THIS IS A WORK IN PROGRESS OF THE PROPOSED CIP STANDARD CIP-113 PROGRAMMABLE TOKENS //
 
 // pub type AccountMintAction {
 //   AMint { acc: ByteArray }
 //   ABurn
 // }
 
-// pub type AccountAction {AccountAction}
+// pub type AccountAction {
+//   AccountAction
+// }
 
 // pub type AccountDatum {
 //   // this field wouldnt be needed if the AssetName is the credential

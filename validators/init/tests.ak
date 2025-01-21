@@ -151,5 +151,6 @@ test closeAccount() {
 }
 
 test burnSupply() {
+  trace @"TODO"
   True
 }
